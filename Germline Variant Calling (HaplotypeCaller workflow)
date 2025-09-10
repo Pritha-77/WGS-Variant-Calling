@@ -4,27 +4,34 @@
 # -----------------------
 # Step 0: Download raw data
 # -----------------------
+
 # Here we download paired-end FASTQ reads for the sample from the ENA database
 ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR062/SRR062634/SRR062634_1.fastq.gz 
 ftp://ftp.sra.ebi.ac.uk/vol1/fastq/SRR062/SRR062634/SRR062634_2.fastq.gz 
+
 # Creates folder structure to organize files
 mkdir aligned_reads reads scripts results data
 echo "Run Prep files..."
 
-##### Prep files (TO BE GENERATED ONLY ONCE) ################################
 # -----------------------
 # Step 1: Download reference files
 # -----------------------
+
+########### Prep files (TO BE GENERATED ONLY ONCE) ###########
 # Reference genome (hg38), index, and known variant sites (dbSNP)
+
 # download reference files
 wget -P ~/GATK/index_files/ https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
 gunzip hg38.fa.gz
+
 # index ref - .fai file before running the haplotype caller
 # creates FASTA index (.fai)
 samtools faidx hg38.fa
+
 # ref dict - .dict file before running haplotype caller
 # creates sequence dictionary (.dict)
 gatk CreateSequenceDictionary -R hg38.fa -O hg38.dict
+
 # download known sites files for BQSR from GATK resource bundle
 wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf 
 wget https://storage.googleapis.com/genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf.idx
@@ -41,6 +48,7 @@ data="/mnt/c/GATK/data"
 # -----------------------
 # Step 2: QC of raw reads
 # -----------------------
+
 # FastQC evaluates sequence quality, GC content, and adapter contamination
 fastqc ${reads}/SRR062634_1.fastq -o ${reads}/
 fastqc ${reads}/SRR062634_2.fastq -o ${reads}/
@@ -49,53 +57,67 @@ fastqc ${reads}/SRR062634_2.fastq -o ${reads}/
 # -----------------------
 # Step 3: Alignment: Map reads to reference genome using BWA-MEM
 # -----------------------
+
 # BWA index reference 
 bwa index ${ref}
+
 # BWA alignment
 bwa mem -t 4 -R "@RG\tID:SRR062634\tPL:ILLUMINA\tSM:SRR062634" ${ref} ${reads}/SRR062634_1.fastq.gz ${reads}/SRR062634_2.fastq.gz > ${aligned_reads}/SRR062634.paired.sam
 
 # -----------------------------------------
 # STEP 4: Mark Duplicates and Sort - GATK4
 # -----------------------------------------
+
 # Removes PCR duplicates to reduce false positives
 gatk MarkDuplicatesSpark \
     -I ${aligned_reads}/SRR062634.paired.sam \
     -O ${aligned_reads}/SRR062634_sorted_dedup_reads.bam
+
 # -----------------------
 # Step 5: Base Quality Score Recalibration (BQSR)
 # -----------------------
+
 # Corrects sequencing machine errors using known variant sites
+
 # 1. build the model
 gatk BaseRecalibrator \
     -I ${aligned_reads}/SRR062634_sorted_dedup_reads.bam \
     -R ${ref} \
     --known-sites ${known_sites} \
     -O ${data}/recal_data.table
+
 # 2. Apply the model to adjust the base quality scores
 gatk ApplyBQSR -I ${aligned_reads}/SRR062634_sorted_dedup_reads.bam \
   -R ${ref} \
   --bqsr-recal-file ${data}/recal_data.table \
   -O ${aligned_reads}/SRR062634_sorted_dedup_bqsr_reads.bam
+
 # -----------------------
 # Step 6: Collect QC metrics
 # -----------------------
+
 # Generates alignment and insert size statistics
 gatk CollectAlignmentSummaryMetrics R=${ref} I=${aligned_reads}/SRR062634_sorted_dedup_bqsr_reads.bam O=${aligned_reads}/alignment_metrics.txt
 gatk CollectInsertSizeMetrics INPUT=${aligned_reads}/SRR062634_sorted_dedup_bqsr_reads.bam OUTPUT=${aligned_reads}/insert_size_metrics.txt HISTOGRAM_FILE=${aligned_reads}/insert_size_histogram.pdf
+
 # -----------------------
 # Step 7: Variant Calling
 # -----------------------
+
 # Calls SNPs and INDELs using HaplotypeCaller
 gatk HaplotypeCaller -R ${ref} -I ${aligned_reads}/SRR062634_sorted_dedup_bqsr_reads.bam -O ${results}/raw_variants.vcf
+
 # extract SNPs & INDELS
 gatk SelectVariants -R ${ref} -V ${results}/raw_variants.vcf --select-type SNP -O ${results}/raw_snps.vcf
 gatk SelectVariants -R ${ref} -V ${results}/raw_variants.vcf --select-type INDEL -O ${results}/raw_indels.vcf
 
-#Note: instead of indels and SNPs raw_variants.vcf file can also be used as input.
+
 # -----------------------
 # Step 8: Variant Filtering
 # -----------------------
+
 # Applies GATK recommended hard filters to remove false positives
+
 # Filter SNPs
 gatk VariantFiltration \
 	-R ${ref} \
@@ -139,9 +161,11 @@ gatk SelectVariants \
 cat analysis-ready-snps.vcf|grep -v -E "DP_filter|GQ_filter" > analysis-ready-snps-filteredGT.vcf
 
 cat analysis-ready-indels.vcf| grep -v -E "DP_filter|GQ_filter" > analysis-ready-indels-filteredGT.vcf
+
 # -----------------------
 # Step 9: Functional Annotation
 # -----------------------
+
 # Adds gene names, transcript info, ClinVar annotations, etc.
              # -----------------------
             # Prepare Funcotator annotation data sources
@@ -156,9 +180,6 @@ funcotator_dataSources.v1.7.20200521s.tar.gz
 # Download data sources for GERMLINE variant annotation
 gatk FuncotatorDataSourceDownloader --germline --validate-integrity --extract-after-download
 funcotator_dataSources.v1.7.20200521g.tar.gz
-
-# -------------------
-
 
 # Annotate using Funcotator
 gatk Funcotator \
@@ -207,7 +228,7 @@ cut -f 5 ${results}/output_snps.table | sed 's/^\[//; s/\]$//; s/|/,/g' > ${resu
 cut -f 5 ${results}/output_snps.table | grep "NBPF1" | sed 's/|/\t/g' >> ${results}/output_curated_snp-variants.txt
 
 
-# Alternative approach (scripted)
+# Alternative approach 
 # Define input and output files
 VCF_FILE="${results}/analysis-ready-snps-filteredGT-functotated.vcf"
 OUTPUT_FILE="${results}/output_curated_snp-variants.txt
@@ -217,26 +238,4 @@ grep " Funcotation fields are: " $VCF_FILE | sed 's/|/\t/g' > ${results}/output_
 cut -f 5 ${results}/output_curated_variants.txt | sed 's/|/\t/g' > $OUTPUT_FILE
 # Verify output
 echo "Extracted gene annotations saved to $OUTPUT_FILE"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
