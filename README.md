@@ -1,4 +1,5 @@
 WGS-Variant-Calling
+
 This repository contains workflows for whole-genome and exome variant calling using GATK4, BWA, Samtools, and R-based post-processing.
 Both germline (HaplotypeCaller) and somatic (Mutect2) pipelines are included, following GATK best practices.
 
