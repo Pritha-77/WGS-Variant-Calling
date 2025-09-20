@@ -3,15 +3,6 @@ WGS-Variant-Calling
 This repository contains workflows for whole-genome and exome variant calling using GATK4, BWA, Samtools, and R-based post-processing.
 Both germline (HaplotypeCaller) and somatic (Mutect2) pipelines are included, following GATK best practices.
 
-📂 Repository Structure
-WGS-Variant-Calling/
-│
-├── Germline Variant Calling (HaplotypeCaller workflow)       # Germline (HaplotypeCaller) pipeline
-├── Somatic Variant Calling (Mutect2 workflow)                # Somatic (Mutect2 tumor–normal) pipeline
-├── R script: post-GATK exploratory analysis of VCF           # R scripts for downstream VCF analysis
-└── README.md                                                 # This file
-
-________________________________________
 
 🚀 Workflows
    
@@ -57,7 +48,7 @@ ________________________________________
 
 📊 Downstream R Analysis
 The R scripts in postprocessing_analysis.R provide:
-•	Extraction of Funcotator annotations into clean CSV tables
+•  Extraction of Funcotator annotations into clean CSV tables
 •	Exploration of genotype (GT), depth (DP), quality (GQ) distributions
 •	Mutation spectrum analysis (SNP, INS, DEL, Ti/Tv ratios)
 •	Trinucleotide mutational context & APOBEC signature checks
