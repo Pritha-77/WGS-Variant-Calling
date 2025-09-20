@@ -47,14 +47,23 @@ Output:
 ________________________________________
 
 📊 Downstream R Analysis
+
 The R scripts in postprocessing_analysis.R provide:
+
 •  Extraction of Funcotator annotations into clean CSV tables
+
 •	Exploration of genotype (GT), depth (DP), quality (GQ) distributions
+
 •	Mutation spectrum analysis (SNP, INS, DEL, Ti/Tv ratios)
+
 •	Trinucleotide mutational context & APOBEC signature checks
+
 •	dbSNP annotation and amino acid consequence prediction
+
 Output:
+
 •	Funcotator_Extracted_Annotations.csv
+
 •	Mutation type barplots, Ti/Tv plots, trinucleotide context plots
 
 ________________________________________
@@ -62,16 +71,19 @@ ________________________________________
 ⚙️ Requirements
 
 **Core tools**
+
 o	GATK 4.2+
+
 o	BWA
+
 o	Samtools
+
 o	FastQC
+
 o	Seqtk (for subsetting reads)
 
 **R packages**
+
 o	VariantAnnotation, dplyr, tidyr, ggplot2
 o	BSgenome.Hsapiens.UCSC.hg38, TxDb.Hsapiens.UCSC.hg38.knownGene
 o	SNPlocs.Hsapiens.dbSNP155.GRCh38
-
-
-
