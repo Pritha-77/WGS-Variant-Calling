@@ -85,5 +85,7 @@ o	Seqtk (for subsetting reads)
 **R packages**
 
 o	VariantAnnotation, dplyr, tidyr, ggplot2
+
 o	BSgenome.Hsapiens.UCSC.hg38, TxDb.Hsapiens.UCSC.hg38.knownGene
+
 o	SNPlocs.Hsapiens.dbSNP155.GRCh38
