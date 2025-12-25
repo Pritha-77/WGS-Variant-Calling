@@ -54,6 +54,24 @@ fastqc ${reads}/SRR062634_1.fastq -o ${reads}/
 fastqc ${reads}/SRR062634_2.fastq -o ${reads}/
 # No trimming required: No adapter sequence.
 
+
+#_______If trimming is required_______#
+
+# Trim adapters and low-quality bases using Trim Galore
+# This removes:
+# - Illumina sequencing adapters that can interfere with alignment
+# - Low-quality bases (quality score < 20) from read ends
+# - Very short reads (< 50bp) that may align poorly
+trim_galore \
+    --paired \           # Indicates we have paired-end reads (R1 and R2)
+    --quality 20 \       # Remove bases with quality score < 20
+    --length 50 \        # Discard reads shorter than 50bp after trimming
+    --fastqc \           # Run FastQC on trimmed reads for comparison
+    --output_dir ~GATK/${reads} \
+    ~/wgs_analysis/data/${reads}_R1.fastq.gz \
+    ~/wgs_analysis/data/${reads}_R2.fastq.gz
+
+
 # -----------------------
 # Step 3: Alignment: Map reads to reference genome using BWA-MEM
 # -----------------------
